@@ -11,6 +11,8 @@ import (
 	"os/exec"
 	"strings"
 
+	"github.com/gobuffalo/packr/v2/jam"
+
 	"github.com/magefile/mage/mg" // mg contains helpful utility functions, like Deps
 )
 
@@ -20,12 +22,12 @@ const exeName = "gooey"
 
 // Build makes the executable.
 func Build() error {
-	mg.Deps(BuildWASM)
+	mg.Deps(Packr)
 
 	run("go", map[string]string{}, "get", "github.com/zserge/webview")
-	run("go", map[string]string{}, "get", "-u", "github.com/gobuffalo/packr/v2/packr2")
+	//run("go", map[string]string{}, "get", "-u", "github.com/gobuffalo/packr/v2/packr2")
 
-	if er := run("packr2",
+	if er := run("go",
 		map[string]string{"GOOS": "linux"}, "build", "-o", exeName); er != nil {
 		return er
 	}
@@ -33,10 +35,24 @@ func Build() error {
 	return nil
 }
 
+func Packr() error {
+	mg.Deps(BuildWASM)
+	os.Chdir("./www")
+	defer os.Chdir("..")
+
+	opts := jam.PackOptions{
+		IgnoreImports: false,
+		Legacy:        false,
+		StoreCmd:      "",
+		Roots:         []string{},
+	}
+	return jam.Pack(opts)
+}
+
 func BuildWASM() error {
 	// Copy the wasm js support file
-	download("./static/wasm_exec.js", "https://raw.githubusercontent.com/golang/go/master/misc/wasm/wasm_exec.js")
-	wasmExec := "./static/go.wasm"
+	download("./www/wasm_exec.js", "https://raw.githubusercontent.com/golang/go/master/misc/wasm/wasm_exec.js")
+	wasmExec := "./www/main.wasm"
 	os.Remove(wasmExec)
 	// Build WASM stuff.
 	return run("go", map[string]string{"GOOS": "js", "GOARCH": "wasm"}, "build", "-o", wasmExec, "./wasm/main.go")

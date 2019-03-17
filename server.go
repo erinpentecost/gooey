@@ -12,7 +12,12 @@ import (
 )
 
 func main() {
-	box := packr.NewBox("./static")
+	box := packr.New("www", "./www")
+
+	log.Printf("Box contents:")
+	for _, f := range box.List() {
+		log.Printf("    %s", f)
+	}
 
 	addr := "127.0.0.1:8622"
 

@@ -25,3 +25,5 @@ go run bootstrap.go
 Try to build with `mage -v build`.
 
 If you get *Package gtk+-3.0 was not found in the pkg-config search path*, then run `sudo apt-get install libwebkit2gtk-4.0-dev`
+
+Once built, you can run inside your browser with `goexec 'http.ListenAndServe(":8080", http.FileServer(http.Dir("./www")))'`
