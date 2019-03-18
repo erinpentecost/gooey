@@ -3,6 +3,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"log"
@@ -24,7 +25,7 @@ const exeName = "gooey"
 func Build() error {
 	mg.Deps(Packr)
 
-	run("go", map[string]string{}, "get", "github.com/zserge/webview")
+	//run("go", map[string]string{}, "get", "github.com/zserge/webview")
 	//run("go", map[string]string{}, "get", "-u", "github.com/gobuffalo/packr/v2/packr2")
 
 	if er := run("go",
@@ -52,6 +53,7 @@ func Packr() error {
 func BuildWASM() error {
 	// Copy the wasm js support file
 	download("./www/wasm_exec.js", "https://raw.githubusercontent.com/golang/go/master/misc/wasm/wasm_exec.js")
+
 	wasmExec := "./www/main.wasm"
 	os.Remove(wasmExec)
 	// Build WASM stuff.
@@ -62,13 +64,19 @@ func BuildWASM() error {
 func run(name string, override map[string]string, arg ...string) error {
 	log.Printf("Calling '%s %s'...", name, strings.Join(arg, " "))
 	cmd := exec.Command(name, arg...)
+
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+
 	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
+
 	cmd.Env = os.Environ()
 	for k, v := range override {
 		cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", k, v))
 	}
 	if err := cmd.Run(); err != nil {
+		defer log.Println("...Failed.")
+		log.Println(string(stderr.Bytes()))
 		log.Println(err)
 		return err
 	}
@@ -100,6 +108,8 @@ func copy(src, dst string) error {
 
 // download will pull the file at url into filepath
 func download(filepath, url string) error {
+	log.Printf("Downloading '%s'...\n", url)
+	defer log.Println("...Done.")
 	// Create the file
 	out, err := os.Create(filepath)
 	if err != nil {
@@ -121,6 +131,5 @@ func download(filepath, url string) error {
 		os.Remove(filepath)
 		return err
 	}
-
 	return nil
 }

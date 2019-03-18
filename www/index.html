@@ -5,9 +5,10 @@
 		<script>
 			const go = new Go();
 			WebAssembly.instantiateStreaming(fetch("main.wasm"), go.importObject).then((result) => {
+				print("loaded")
 				go.run(result.instance);
 			});
 		</script>
 	</head>
-	<body>hi</body>
+	<body>Hi!<div id="app"></div></body>
 </html>
