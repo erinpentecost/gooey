@@ -39,7 +39,7 @@ func main() {
 
 	// Open up a window
 	log.Print("Opening window...\n", addr)
-	webview.Open("Hello", fmt.Sprintf("http://%s/time", addr), 400, 300, false)
+	webview.Open("Hello", fmt.Sprintf("http://%s/main.html", addr), 400, 300, false)
 }
 
 // handleTime handles the /time endpoint.
