@@ -9,5 +9,5 @@ import (
 func main() {
 	fmt.Println("Hello, WebAssembly!")
 	app := js.Global().Get("document").Call("getElementById", "app")
-	app.Set("innerHTML", "This was set by Go!")
+	app.Set("innerHTML", "WASM running!")
 }

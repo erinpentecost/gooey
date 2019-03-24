@@ -15,7 +15,7 @@ import (
 
 	"github.com/shurcooL/vfsgen"
 
-	"github.com/magefile/mage/mg" // mg contains helpful utility functions, like Deps
+	"github.com/magefile/mage/mg"
 )
 
 var Default = Build
@@ -24,7 +24,7 @@ const exeName = "gooey"
 const clientWASMMain = "./client/main.go"
 const staticDir = "./client/www"
 
-// Build makes the executable.
+// Build makes the standalone executable.
 func Build() error {
 	mg.Deps(EmbedWWW)
 
@@ -36,6 +36,7 @@ func Build() error {
 	return nil
 }
 
+// EmbedWWW packages up the static client/www directory into a binary.
 func EmbedWWW() error {
 	mg.Deps(BuildWASM)
 
@@ -48,11 +49,26 @@ func EmbedWWW() error {
 	})
 }
 
+// Run starts up a static local server for quick testing.
+func Run() error {
+	mg.Deps(BuildWASM)
+	port := 8089
+	log.Printf("Running on http://localhost:%v/main.html", port)
+	log.Println("Ctrl-C to exit.")
+	return http.ListenAndServe(fmt.Sprintf(":%v", port), http.FileServer(http.Dir(staticDir)))
+}
+
+// BuildWASM builds the client/main.go file into client/www/main.wasm.
 func BuildWASM() error {
 	// Copy the wasm js support file
 	// download("./www/wasm_exec.js", "https://raw.githubusercontent.com/golang/go/master/misc/wasm/wasm_exec.js")
-	jsexec := path.Join(os.ExpandEnv("${GOROOT}"), "misc", "wasm", "wasm_exec.js")
-	copy(jsexec, path.Join(staticDir, "wasm_exec.js"))
+	targetJS := path.Join(staticDir, "wasm_exec.js")
+	sourceJS := path.Join(os.ExpandEnv("${GOROOT}"), "misc", "wasm", "wasm_exec.js")
+	if _, err := os.Stat(sourceJS); !os.IsNotExist(err) {
+		if er := copy(sourceJS, targetJS); er != nil {
+			return er
+		}
+	}
 
 	wasmExec := path.Join(staticDir, "main.wasm")
 	os.Remove(wasmExec)

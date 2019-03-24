@@ -3,11 +3,9 @@ package main
 
 import (
 	"fmt"
-	"io"
 	"log"
 	"net"
 	"net/http"
-	"time"
 
 	"github.com/zserge/webview"
 )
@@ -25,19 +23,12 @@ func main() {
 	go func() {
 		log.Printf("Hosting on %s ...\n", addr)
 		http.Handle("/", http.FileServer(Assets))
-		http.HandleFunc("/time", handleTime)
 		log.Fatal(http.Serve(ln, nil))
 	}()
 
-	// Open up a window
-	log.Print("Opening window...\n", addr)
-	webview.Open("Hello", fmt.Sprintf("http://%s/main.html", addr), 400, 300, false)
-}
+	targetURL := fmt.Sprintf("http://%s/main.html", addr)
 
-// handleTime handles the /time endpoint.
-// It is used to demonstrate an API call from app.js.
-func handleTime(w http.ResponseWriter, r *http.Request) {
-	if _, err := io.WriteString(w, time.Now().Format(time.RFC822)); err != nil {
-		log.Println(err)
-	}
+	// Open up a window
+	log.Printf("Opening window to %s ...\n", targetURL)
+	webview.Open("Hello", targetURL, 400, 300, false)
 }
