@@ -20,6 +20,7 @@ import (
 var Default = Build
 
 const exeName = "gooey"
+const clientWASMMain = "./wasm/main.go"
 
 // Build makes the executable.
 func Build() error {
@@ -36,6 +37,7 @@ func Build() error {
 	return nil
 }
 
+// todo: refactor for https://github.com/shurcooL/vfsgen
 func Packr() error {
 	mg.Deps(BuildWASM)
 	os.Chdir("./www")
@@ -57,7 +59,7 @@ func BuildWASM() error {
 	wasmExec := "./www/main.wasm"
 	os.Remove(wasmExec)
 	// Build WASM stuff.
-	return run("go", map[string]string{"GOOS": "js", "GOARCH": "wasm"}, "build", "-o", wasmExec, "./wasm/main.go")
+	return run("go", map[string]string{"GOOS": "js", "GOARCH": "wasm"}, "build", "-o", wasmExec, clientWASMMain)
 }
 
 // run starts a shell cmd.
