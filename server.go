@@ -9,18 +9,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/gobuffalo/packr/v2"
 	"github.com/zserge/webview"
 )
 
 func main() {
-	box := packr.New("www", "./www")
-
-	log.Printf("Box contents:")
-	for _, f := range box.List() {
-		log.Printf("    %s", f)
-	}
-
 	// Reserve port to act as server
 	ln, err := net.Listen("tcp", ":0")
 	addr := ln.Addr()
@@ -32,7 +24,7 @@ func main() {
 	// Serve up http requests on the port
 	go func() {
 		log.Printf("Hosting on %s ...\n", addr)
-		http.Handle("/", http.FileServer(box))
+		http.Handle("/", http.FileServer(Assets))
 		http.HandleFunc("/time", handleTime)
 		log.Fatal(http.Serve(ln, nil))
 	}()

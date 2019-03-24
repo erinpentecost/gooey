@@ -12,7 +12,7 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/gobuffalo/packr/v2/jam"
+	"github.com/shurcooL/vfsgen"
 
 	"github.com/magefile/mage/mg" // mg contains helpful utility functions, like Deps
 )
@@ -24,10 +24,7 @@ const clientWASMMain = "./wasm/main.go"
 
 // Build makes the executable.
 func Build() error {
-	mg.Deps(Packr)
-
-	//run("go", map[string]string{}, "get", "github.com/zserge/webview")
-	//run("go", map[string]string{}, "get", "-u", "github.com/gobuffalo/packr/v2/packr2")
+	mg.Deps(EmbedWWW)
 
 	if er := run("go",
 		map[string]string{"GOOS": "linux"}, "build", "-o", exeName); er != nil {
@@ -37,19 +34,16 @@ func Build() error {
 	return nil
 }
 
-// todo: refactor for https://github.com/shurcooL/vfsgen
-func Packr() error {
+func EmbedWWW() error {
 	mg.Deps(BuildWASM)
-	os.Chdir("./www")
-	defer os.Chdir("..")
 
-	opts := jam.PackOptions{
-		IgnoreImports: false,
-		Legacy:        false,
-		StoreCmd:      "",
-		Roots:         []string{},
-	}
-	return jam.Pack(opts)
+	fs := http.Dir("./www")
+
+	return vfsgen.Generate(fs, vfsgen.Options{
+		PackageName:  "main",
+		BuildTags:    "!wasm",
+		VariableName: "Assets",
+	})
 }
 
 func BuildWASM() error {
