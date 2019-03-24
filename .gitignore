@@ -1,3 +1,2 @@
-www/main.wasm
+client/www/main.wasm
 gooey
-*-packr.go

@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"path"
 	"strings"
 
 	"github.com/shurcooL/vfsgen"
@@ -20,7 +21,8 @@ import (
 var Default = Build
 
 const exeName = "gooey"
-const clientWASMMain = "./wasm/main.go"
+const clientWASMMain = "./client/main.go"
+const staticDir = "./client/www"
 
 // Build makes the executable.
 func Build() error {
@@ -37,7 +39,7 @@ func Build() error {
 func EmbedWWW() error {
 	mg.Deps(BuildWASM)
 
-	fs := http.Dir("./www")
+	fs := http.Dir(staticDir)
 
 	return vfsgen.Generate(fs, vfsgen.Options{
 		PackageName:  "main",
@@ -48,9 +50,11 @@ func EmbedWWW() error {
 
 func BuildWASM() error {
 	// Copy the wasm js support file
-	download("./www/wasm_exec.js", "https://raw.githubusercontent.com/golang/go/master/misc/wasm/wasm_exec.js")
+	// download("./www/wasm_exec.js", "https://raw.githubusercontent.com/golang/go/master/misc/wasm/wasm_exec.js")
+	jsexec := path.Join(os.ExpandEnv("${GOROOT}"), "misc", "wasm", "wasm_exec.js")
+	copy(jsexec, path.Join(staticDir, "wasm_exec.js"))
 
-	wasmExec := "./www/main.wasm"
+	wasmExec := path.Join(staticDir, "main.wasm")
 	os.Remove(wasmExec)
 	// Build WASM stuff.
 	return run("go", map[string]string{"GOOS": "js", "GOARCH": "wasm"}, "build", "-o", wasmExec, clientWASMMain)
@@ -83,6 +87,7 @@ func run(name string, override map[string]string, arg ...string) error {
 // copy the src file to dst. Any existing file will be overwritten and will not
 // copy file attributes.
 func copy(src, dst string) error {
+	log.Printf("Copying '%s' to '%s'...", src, dst)
 	in, err := os.Open(src)
 	if err != nil {
 		return err
@@ -99,33 +104,9 @@ func copy(src, dst string) error {
 	if err != nil {
 		return err
 	}
-	return out.Close()
-}
-
-// download will pull the file at url into filepath
-func download(filepath, url string) error {
-	log.Printf("Downloading '%s'...\n", url)
-	defer log.Println("...Done.")
-	// Create the file
-	out, err := os.Create(filepath)
-	if err != nil {
+	if err = out.Close(); err != nil {
 		return err
 	}
-	defer out.Close()
-
-	// Get the data
-	resp, err := http.Get(url)
-	if err != nil {
-		os.Remove(filepath)
-		return err
-	}
-	defer resp.Body.Close()
-
-	// Write the body to file
-	_, err = io.Copy(out, resp.Body)
-	if err != nil {
-		os.Remove(filepath)
-		return err
-	}
+	log.Printf("...Returned ok.")
 	return nil
 }
