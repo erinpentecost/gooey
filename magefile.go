@@ -21,7 +21,7 @@ import (
 var Default = Build
 
 const exeName = "gooey"
-const clientWASMMain = "./client/main.go"
+const clientWASMMain = "./client"
 const staticDir = "./client/www"
 
 // Build makes the standalone executable.
@@ -29,7 +29,7 @@ func Build() error {
 	mg.Deps(EmbedWWW)
 
 	if er := run("go",
-		map[string]string{"GOOS": "linux"}, "build", "-o", exeName); er != nil {
+		map[string]string{"GOOS": "linux"}, "build", "-o", exeName, "./wrapper"); er != nil {
 		return er
 	}
 
@@ -43,6 +43,7 @@ func EmbedWWW() error {
 	fs := http.Dir(staticDir)
 
 	return vfsgen.Generate(fs, vfsgen.Options{
+		Filename: "./wrapper/wwwData.go",
 		PackageName:  "main",
 		BuildTags:    "!wasm",
 		VariableName: "Assets",
