@@ -50,6 +50,7 @@ func EmbedWWW() error {
 }
 
 // Run starts up a static local server for quick testing.
+// This skips binary building and relies on an external browser.
 func Run() error {
 	mg.Deps(BuildWASM)
 	port := 8089
