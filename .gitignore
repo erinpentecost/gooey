@@ -1,3 +1,4 @@
 gooey
 www/main.wasm
 wwwData.go
+dist/
