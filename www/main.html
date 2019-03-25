@@ -13,6 +13,7 @@
 			// stream main and run
 			const go = new Go();
 			WebAssembly.instantiateStreaming(fetch("main.wasm"), go.importObject).then((result) => {
+				window.external.invoke('loaded');
 				go.run(result.instance);
 			});
 		</script>
