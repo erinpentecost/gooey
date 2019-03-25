@@ -21,15 +21,15 @@ import (
 var Default = Build
 
 const exeName = "gooey"
-const clientWASMMain = "./client"
-const staticDir = "./client/www"
+const clientWASMMain = "./"
+const staticDir = "./www"
 
 // Build makes the standalone executable.
 func Build() error {
 	mg.Deps(EmbedWWW)
 
 	if er := run("go",
-		map[string]string{"GOOS": "linux"}, "build", "-o", exeName, "./wrapper"); er != nil {
+		map[string]string{"GOOS": "linux"}, "build", "-o", exeName); er != nil {
 		return er
 	}
 
@@ -43,9 +43,9 @@ func EmbedWWW() error {
 	fs := http.Dir(staticDir)
 
 	return vfsgen.Generate(fs, vfsgen.Options{
-		Filename: "./wrapper/wwwData.go",
+		Filename:     "./wwwData.go",
 		PackageName:  "main",
-		BuildTags:    "!wasm",
+		BuildTags:    "!js,!wasm",
 		VariableName: "Assets",
 	})
 }
@@ -60,8 +60,9 @@ func Run() error {
 	return http.ListenAndServe(fmt.Sprintf(":%v", port), http.FileServer(http.Dir(staticDir)))
 }
 
-// BuildWASM builds the client/main.go file into client/www/main.wasm.
+// BuildWASM builds the js/wasm packages.
 func BuildWASM() error {
+	
 	// Copy the wasm js support file
 	// download("./www/wasm_exec.js", "https://raw.githubusercontent.com/golang/go/master/misc/wasm/wasm_exec.js")
 	targetJS := path.Join(staticDir, "wasm_exec.js")
@@ -72,10 +73,9 @@ func BuildWASM() error {
 		}
 	}
 
-	wasmExec := path.Join(staticDir, "main.wasm")
-	os.Remove(wasmExec)
 	// Build WASM stuff.
-	return run("go", map[string]string{"GOOS": "js", "GOARCH": "wasm"}, "build", "-o", wasmExec, clientWASMMain)
+	wasmExec := path.Join(staticDir, "main.wasm")
+	return run("go", map[string]string{"GOOS": "js", "GOARCH": "wasm"}, "build", "-o", wasmExec)
 }
 
 // run starts a shell cmd.
