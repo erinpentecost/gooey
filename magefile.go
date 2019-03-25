@@ -20,24 +20,23 @@ import (
 
 var Default = Build
 
+// exeName is the name of the executable file.
 const exeName = "gooey"
+
 const clientWASMMain = "./"
 const staticDir = "./www"
 
 // Build makes the standalone executable.
 func Build() error {
-	mg.Deps(EmbedWWW)
+	mg.Deps(embedWWW)
 
-	if er := run("go",
-		map[string]string{"GOOS": "linux"}, "build", "-o", exeName); er != nil {
-		return er
-	}
+	binPath := path.Join("dist", os.ExpandEnv("${GOOS}"), exeName)
 
-	return nil
+	return run("go", map[string]string{}, "build", "-o", binPath)
 }
 
-// EmbedWWW packages up the static client/www directory into a binary.
-func EmbedWWW() error {
+// embedWWW packages up the static client/www directory into a binary.
+func embedWWW() error {
 	mg.Deps(BuildWASM)
 
 	fs := http.Dir(staticDir)

@@ -15,7 +15,7 @@ func main() {
 	app := js.Global().Get("document").Call("getElementById", "app")
 	
 	for {
-		app.Set("innerHTML", fmt.Sprintf("WASM running!\n%s", time.Now().String()))
+		app.Set("innerHTML", fmt.Sprintf("WASM running!\n<hr/>%s", time.Now().String()))
 		time.Sleep(time.Second)
 	}
 }
