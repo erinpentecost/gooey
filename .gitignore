@@ -1,4 +1,5 @@
 gooey
 www/main.wasm
+www/wasm_exec.js
 wwwData.go
 dist/
